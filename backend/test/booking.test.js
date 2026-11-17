@@ -45,12 +45,14 @@ test('booking input is normalized and validated before reaching PostgreSQL', () 
   const date = nextOpenDate();
   assert.deepEqual(normalizeBooking({
     service: 'Corte + Barba',
+    barber_id: 'any',
     name: '  Carlos Silva  ',
     phone: '(31) 98888-7777',
     date,
     time: '15:00',
   }), {
     service: 'Corte + Barba',
+    barberId: 'any',
     name: 'Carlos Silva',
     phone: '31988887777',
     date,
@@ -59,6 +61,8 @@ test('booking input is normalized and validated before reaching PostgreSQL', () 
   assert.equal(normalizeBooking({ service: 'Inventado', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
   assert.equal(normalizeBooking({ service: 'Corte', name: 'C', phone: '31988887777', date, time: '15:00' }), null);
   assert.equal(normalizeBooking({ service: 'Corte', name: 'Carlos', phone: '123', date, time: '15:00' }), null);
+  assert.equal(normalizeBooking({ service: 'Corte', barber_id: 'unknown', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
+  assert.equal(normalizeBooking({ service: 'Corte', barber_id: 'wilson', name: 'Carlos', phone: '31988887777', date, time: '15:00' })?.barberId, 'wilson');
 });
 
 test('date offsets are whole calendar days', () => {
@@ -70,16 +74,19 @@ test('WhatsApp notification contains contact, new booking, and the full daily ag
     id: 'new',
     customer_name: 'Carlos Silva',
     customer_phone: '31988887777',
+    barber_id: 'wilson',
+    barber_name: 'Wilson',
     service: 'Corte + Barba',
     booking_date: '2026-11-18',
     booking_time: '15:30',
   };
   const message = buildMessage(appointment, [
-    { id: 'old', customer_name: 'João Souza', service: 'Corte', booking_time: '09:00' },
+    { id: 'old', customer_name: 'João Souza', service: 'Corte', barber_name: 'Barbeiro 1', booking_time: '09:00' },
     { ...appointment },
   ]);
   assert.match(message, /NOVO AGENDAMENTO RECEBIDO/);
   assert.match(message, /Contato:\* \+5531988887777/);
-  assert.match(message, /09:00 - João Souza \(Corte\)/);
-  assert.match(message, /15:30 - Carlos Silva \(Corte \+ Barba\).*Novo/);
+  assert.match(message, /Barbeiro:\* Wilson/);
+  assert.match(message, /09:00 - João Souza \(Corte · Barbeiro 1\)/);
+  assert.match(message, /15:30 - Carlos Silva \(Corte \+ Barba · Wilson\).*Novo/);
 });
