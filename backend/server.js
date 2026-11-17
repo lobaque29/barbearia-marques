@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import pg from 'pg';
-import { dayOffset, localDateKey, normalizeBooking, validDate } from './booking.js';
+import { barbers, dayOffset, localDateKey, normalizeBooking, validDate } from './booking.js';
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -60,7 +60,8 @@ async function availability(url, response) {
   }
   const result = await pool.query(
     `SELECT booking_date::text AS booking_date,
-            to_char(booking_time, 'HH24:MI:SS') AS booking_time
+          barber_id,
+          to_char(booking_time, 'HH24:MI:SS') AS booking_time
        FROM appointments
       WHERE booking_date BETWEEN $1::date AND $2::date
         AND status IN ('pending', 'confirmed')
@@ -80,13 +81,34 @@ async function createAppointment(request, response) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await client.query(
+      'SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))',
+      [booking.date, booking.time],
+    );
+    const occupied = await client.query(
+      `SELECT barber_id
+         FROM appointments
+        WHERE booking_date = $1::date
+          AND booking_time = $2::time
+          AND status IN ('pending', 'confirmed')`,
+      [booking.date, booking.time],
+    );
+    const occupiedBarbers = new Set(occupied.rows.map(row => row.barber_id));
+    const barber = booking.barberId === 'any'
+      ? barbers.find(candidate => !occupiedBarbers.has(candidate.id))
+      : barbers.find(candidate => candidate.id === booking.barberId && !occupiedBarbers.has(candidate.id));
+    if (!barber) {
+      await client.query('ROLLBACK');
+      sendJson(response, 409, { reserved: false, error: 'Esse horário acabou de ser reservado para esse barbeiro. Escolha outro horário.' });
+      return;
+    }
     const inserted = await client.query(
       `INSERT INTO appointments
-         (service, customer_name, customer_phone, booking_date, booking_time)
-       VALUES ($1, $2, $3, $4::date, $5::time)
-       RETURNING id, service, customer_name, booking_date::text AS booking_date,
+         (service, barber_id, customer_name, customer_phone, booking_date, booking_time)
+       VALUES ($1, $2, $3, $4, $5::date, $6::time)
+       RETURNING id, service, barber_id, customer_name, booking_date::text AS booking_date,
                  to_char(booking_time, 'HH24:MI') AS booking_time`,
-      [booking.service, booking.name, booking.phone, booking.date, booking.time],
+      [booking.service, barber.id, booking.name, booking.phone, booking.date, booking.time],
     );
     const appointment = inserted.rows[0];
     await client.query(
@@ -94,7 +116,11 @@ async function createAppointment(request, response) {
       [appointment.id],
     );
     await client.query('COMMIT');
-    sendJson(response, 201, { reserved: true, booking: appointment, notification: 'queued' });
+    sendJson(response, 201, {
+      reserved: true,
+      booking: { ...appointment, barber_name: barber.name },
+      notification: 'queued',
+    });
   } catch (error) {
     await client.query('ROLLBACK');
     if (error.code === '23505') {

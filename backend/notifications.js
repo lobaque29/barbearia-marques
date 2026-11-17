@@ -18,6 +18,7 @@ export function buildMessage(appointment, daySchedule) {
     `👤 *Cliente:* ${appointment.customer_name}`,
     `📞 *Contato:* +${formatPhone(appointment.customer_phone)}`,
     `🛠️ *Serviço:* ${appointment.service}`,
+    `💈 *Barbeiro:* ${appointment.barber_name}`,
     `⏰ *Horário:* ${appointment.booking_time.slice(0, 5)} · ${formatDate(appointment.booking_date)}`,
     '',
     '_Horário bloqueado; confirme com o cliente para concluir o atendimento._',
@@ -26,7 +27,7 @@ export function buildMessage(appointment, daySchedule) {
   ];
   const rows = daySchedule.map(item => {
     const isNew = item.id === appointment.id;
-    const line = `${item.booking_time.slice(0, 5)} - ${item.customer_name} (${item.service})`;
+    const line = `${item.booking_time.slice(0, 5)} - ${item.customer_name} (${item.service} · ${item.barber_name})`;
     return isNew ? `🕒 *${line}* 👈 _Novo_` : `• ${line}`;
   });
   return [...heading, ...rows, '', '— Barbearia Marquês'].join('\n');

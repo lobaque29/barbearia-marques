@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { barbers } from './booking.js';
 import { buildMessage } from './notifications.js';
 
 const { Pool } = pg;
@@ -38,7 +39,7 @@ async function claimJob() {
 
 async function deliver(job) {
   const appointmentResult = await pool.query(
-    `SELECT id, service, customer_name, customer_phone,
+    `SELECT id, service, barber_id, customer_name, customer_phone,
             booking_date::text AS booking_date,
             to_char(booking_time, 'HH24:MI') AS booking_time
        FROM appointments WHERE id = $1 AND status IN ('pending', 'confirmed')`,
@@ -52,9 +53,10 @@ async function deliver(job) {
     );
     return;
   }
+  appointment.barber_name = barbers.find(barber => barber.id === appointment.barber_id)?.name;
 
   const scheduleResult = await pool.query(
-    `SELECT id, service, customer_name,
+    `SELECT id, service, barber_id, customer_name,
             to_char(booking_time, 'HH24:MI') AS booking_time
        FROM appointments
       WHERE booking_date = $1::date AND status IN ('pending', 'confirmed')
@@ -77,7 +79,10 @@ async function deliver(job) {
       headers: { apikey: apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         number: formatPhone(recipient),
-        text: buildMessage(appointment, scheduleResult.rows),
+        text: buildMessage(appointment, scheduleResult.rows.map(item => ({
+          ...item,
+          barber_name: barbers.find(barber => barber.id === item.barber_id)?.name,
+        }))),
       }),
       signal: AbortSignal.timeout(15000),
     },

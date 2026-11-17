@@ -3,6 +3,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   service text NOT NULL CHECK (service IN ('Corte', 'Barba', 'Corte + Barba', 'Sobrancelha')),
+  barber_id text NOT NULL DEFAULT 'wilson',
   customer_name text NOT NULL CHECK (char_length(btrim(customer_name)) BETWEEN 2 AND 80),
   customer_phone text NOT NULL CHECK (customer_phone ~ '^[0-9]{10,15}$'),
   booking_date date NOT NULL,
@@ -16,12 +17,23 @@ CREATE TABLE IF NOT EXISTS appointments (
   CHECK (extract(dow FROM booking_date) <> 0)
 );
 
+ALTER TABLE appointments
+  ADD COLUMN IF NOT EXISTS barber_id text NOT NULL DEFAULT 'wilson';
+
+ALTER TABLE appointments
+  DROP CONSTRAINT IF EXISTS appointments_barber_id_check;
+ALTER TABLE appointments
+  ADD CONSTRAINT appointments_barber_id_check
+  CHECK (barber_id IN ('wilson', 'barbeiro1', 'barbeiro2')) NOT VALID;
+
+DROP INDEX IF EXISTS appointments_active_slot_unique;
+
 CREATE UNIQUE INDEX IF NOT EXISTS appointments_active_slot_unique
-  ON appointments (booking_date, booking_time)
+  ON appointments (booking_date, booking_time, barber_id)
   WHERE status IN ('pending', 'confirmed');
 
 CREATE INDEX IF NOT EXISTS appointments_schedule_idx
-  ON appointments (booking_date, booking_time)
+  ON appointments (booking_date, booking_time, barber_id)
   WHERE status IN ('pending', 'confirmed');
 
 CREATE TABLE IF NOT EXISTS notification_jobs (

@@ -1,5 +1,11 @@
 const zone = 'America/Sao_Paulo';
 const services = new Set(['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha']);
+export const barbers = [
+  { id: 'wilson', name: 'Wilson' },
+  { id: 'barbeiro1', name: 'Barbeiro 1' },
+  { id: 'barbeiro2', name: 'Barbeiro 2' },
+];
+const barberIds = new Set(barbers.map(barber => barber.id));
 
 export function localDateParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -52,6 +58,14 @@ export function normalizeBooking(input) {
   const phone = typeof input.phone === 'string' ? input.phone.replace(/\D/g, '') : '';
   if (!services.has(input.service) || name.length < 2 || name.length > 80) return null;
   if (phone.length < 10 || phone.length > 15) return null;
+  if (input.barber_id !== 'any' && !barberIds.has(input.barber_id)) return null;
   if (!validBookingDate(input.date) || !validBookingTime(input.time, input.date)) return null;
-  return { service: input.service, name, phone, date: input.date, time: input.time };
+  return {
+    service: input.service,
+    barberId: input.barber_id,
+    name,
+    phone,
+    date: input.date,
+    time: input.time,
+  };
 }
