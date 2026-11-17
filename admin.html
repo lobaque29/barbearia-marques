@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153f32">
+  <title>Painel da Barbearia Marquês</title>
+  <style>
+    :root{color-scheme:light;--green:#153f32;--mint:#dff4e8;--accent:#2f8f68;--ink:#19352b;--muted:#718078;--line:#e4ece7;--paper:#f5f8f6;--white:#fff;--red:#a94442;--shadow:0 18px 48px rgba(27,74,55,.09)}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}.shell{max-width:1180px;margin:0 auto;padding:32px 22px 60px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}.brand{font-size:20px;font-weight:800;letter-spacing:-.04em}.brand span{color:var(--accent)}.top-actions{display:flex;gap:10px}.button{min-height:42px;padding:0 16px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-weight:650}.button.primary{border-color:var(--green);background:var(--green);color:#fff}.button.danger{color:var(--red)}.heading{margin:0 0 6px;font-size:clamp(28px,4vw,40px);letter-spacing:-.05em}.subheading{margin:0;color:var(--muted);font-size:14px}.toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:24px 0}.field{display:grid;gap:7px}.field label,.price-row label{color:var(--muted);font-size:12px;font-weight:700}.field input,.price-row input{min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 24px}.card,.panel{border:1px solid var(--line);border-radius:17px;background:#fff;box-shadow:var(--shadow)}.card{padding:18px}.card-label{color:var(--muted);font-size:12px;font-weight:650}.card-value{display:block;margin-top:8px;font-size:30px;font-weight:800;letter-spacing:-.04em}.panel{margin-top:20px;padding:22px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}.panel h2{margin:0;font-size:20px;letter-spacing:-.035em}.help{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.55}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px;text-align:left}th,td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}td strong{font-weight:700}.badge{display:inline-flex;padding:5px 9px;border-radius:20px;background:#f0f3f1;font-size:11px;font-weight:700}.badge.pending{background:#fff3d6;color:#805d12}.badge.confirmed{background:#e5f5ec;color:#236747}.badge.cancelled{color:#777}.row-actions{display:flex;gap:7px}.small-button{min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:11px;font-weight:650}.small-button.confirm{color:#236747}.small-button.cancel{color:var(--red)}.empty{padding:28px;text-align:center;color:var(--muted);font-size:14px}.price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}.price-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.price-row input{width:140px}.message{display:none;margin:16px 0;padding:12px 14px;border:1px solid #e8c1bd;border-radius:10px;background:#fff1ef;color:#843c37;font-size:13px}.message.visible{display:block}.toast{position:fixed;right:20px;bottom:20px;z-index:5;max-width:min(420px,calc(100vw - 40px));padding:14px 18px;border-radius:12px;background:var(--green);color:#fff;box-shadow:var(--shadow);font-size:13px}.login-wrap{display:grid;min-height:100vh;place-items:center;padding:24px}.login-card{width:min(420px,100%);padding:30px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow)}.login-card h1{margin:0 0 8px;font-size:28px;letter-spacing:-.04em}.login-card p{margin:0 0 22px;color:var(--muted);font-size:14px}.login-form{display:grid;gap:14px}.login-form input{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--line);border-radius:10px}.privacy{margin-top:12px;color:var(--muted);font-size:11px;line-height:1.6}.hidden{display:none!important}
+    @media(max-width:760px){.shell{padding:24px 15px 44px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{padding:14px}.card-value{font-size:25px}.panel{padding:16px}.price-grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.top-actions{flex-wrap:wrap;justify-content:flex-end}}
+  </style>
+</head>
+<body>
+  <main id="login" class="login-wrap">
+    <section class="login-card">
+      <div class="brand">Barbearia <span>Marquês</span></div>
+      <h1 style="margin-top:22px">Painel de gerenciamento</h1>
+      <p>Entre para acompanhar a agenda, os valores e as visitas ao site.</p>
+      <form id="login-form" class="login-form">
+        <div class="field"><label for="username">Usuário</label><input id="username" name="username" autocomplete="username" required></div>
+        <div class="field"><label for="password">Senha</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+        <button class="button primary" type="submit">Entrar</button>
+      </form>
+      <div id="login-error" class="message" role="alert"></div>
+      <p class="privacy">Acesso restrito. Configure o usuário e a senha no servidor antes de usar.</p>
+    </section>
+  </main>
+  <main id="dashboard" class="shell hidden">
+    <header class="topbar">
+      <div class="brand">Barbearia <span>Marquês</span><div class="subheading">Painel de gerenciamento</div></div>
+      <div class="top-actions">
+        <button id="enable-notifications" class="button" type="button">Ativar alertas</button>
+        <button id="logout" class="button" type="button">Sair</button>
+      </div>
+    </header>
+    <h1 class="heading">Visão geral</h1>
+    <p class="subheading">A agenda e as estatísticas são atualizadas automaticamente.</p>
+    <div class="toolbar">
+      <div class="field"><label for="start-date">De</label><input id="start-date" type="date"></div>
+      <div class="field"><label for="end-date">Até</label><input id="end-date" type="date"></div>
+      <button id="refresh" class="button primary" type="button">Atualizar</button>
+    </div>
+    <div id="dashboard-error" class="message" role="alert"></div>
+    <section class="cards" aria-label="Resumo">
+      <article class="card"><span class="card-label">Visitas no período</span><strong id="visits" class="card-value">—</strong></article>
+      <article class="card"><span class="card-label">Aguardando confirmação</span><strong id="pending" class="card-value">—</strong></article>
+      <article class="card"><span class="card-label">Confirmados</span><strong id="confirmed" class="card-value">—</strong></article>
+      <article class="card"><span class="card-label">Cancelados</span><strong id="cancelled" class="card-value">—</strong></article>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Agendamentos</h2><p class="help">Reservas de todos os barbeiros no período selecionado.</p></div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Data e horário</th><th>Cliente</th><th>Contato</th><th>Serviço</th><th>Barbeiro</th><th>Status</th><th>Ações</th></tr></thead><tbody id="appointments"></tbody></table>
+        <div id="appointments-empty" class="empty hidden">Nenhum agendamento neste período.</div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Valores dos serviços</h2><p class="help">Os preços salvos também aparecem no site de agendamento.</p></div></div>
+      <form id="prices-form">
+        <div id="prices" class="price-grid"></div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap">
+          <button class="button primary" type="submit">Salvar valores</button>
+          <span class="privacy">Visitas são contadas por dia, sem armazenar IP ou identificar visitantes.</span>
+        </div>
+      </form>
+    </section>
+  </main>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script>
+    const services = ['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha'];
+    const labels = { pending: 'Aguardando', confirmed: 'Confirmado', cancelled: 'Cancelado' };
+    const login = document.querySelector('#login'), dashboard = document.querySelector('#dashboard');
+    let knownAppointments = null, refreshTimer, toastTimer;
+
+    function showMessage(element, message) {
+      element.textContent = message;
+      element.classList.toggle('visible', Boolean(message));
+    }
+
+    function showToast(message) {
+      const toast = document.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 6000);
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch('/api' + path, {
+        credentials: 'same-origin',
+        ...options,
+        headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) },
+      });
+      const text = await response.text();
+      let payload = {};
+      if (text) {
+        try { payload = JSON.parse(text); }
+        catch { throw new Error('Resposta inválida do servidor.'); }
+      }
+      if (!response.ok) {
+        if (response.status === 401) showLogin();
+        throw new Error(payload.error || 'Não foi possível concluir a solicitação.');
+      }
+      return payload;
+    }
+
+    function showLogin() {
+      clearInterval(refreshTimer);
+      dashboard.classList.add('hidden');
+      login.classList.remove('hidden');
+    }
+
+    async function showDashboard() {
+      login.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+      try {
+        await Promise.all([loadDashboard(), loadPrices()]);
+      } catch (error) {
+        showMessage(document.querySelector('#dashboard-error'), error.message);
+      }
+      if (dashboard.classList.contains('hidden')) return;
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(() => loadDashboard(true).catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)), 20000);
+    }
+
+    function dates() {
+      const start = document.querySelector('#start-date').value;
+      const end = document.querySelector('#end-date').value;
+      if (!start || !end || end < start || (Date.parse(end) - Date.parse(start)) / 86400000 > 31) {
+        throw new Error('Selecione um período válido de até 32 dias.');
+      }
+      return new URLSearchParams({ start_date: start, end_date: end });
+    }
+
+    function appendCell(row, value, strong = false) {
+      const cell = document.createElement('td');
+      if (strong) {
+        const element = document.createElement('strong');
+        element.textContent = value;
+        cell.append(element);
+      } else cell.textContent = value;
+      row.append(cell);
+      return cell;
+    }
+
+    async function updateStatus(appointment, status) {
+      await api('/admin/appointments/' + encodeURIComponent(appointment.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      showToast(status === 'confirmed' ? 'Agendamento confirmado.' : 'Agendamento cancelado.');
+      await loadDashboard();
+    }
+
+    function renderAppointments(items, notify) {
+      const tbody = document.querySelector('#appointments');
+      tbody.replaceChildren();
+      document.querySelector('#appointments-empty').classList.toggle('hidden', items.length > 0);
+      const ids = new Set(items.map(item => item.id));
+      if (notify && knownAppointments) {
+        const added = items.filter(item => !knownAppointments.has(item.id));
+        for (const appointment of added) {
+          const date = new Date(appointment.booking_date + 'T12:00:00Z').toLocaleDateString('pt-BR');
+          const text = `${appointment.customer_name} · ${appointment.barber_name} · ${date} às ${appointment.booking_time}`;
+          showToast('Novo agendamento: ' + text);
+          if ('Notification' in window && Notification.permission === 'granted') new Notification('Novo agendamento', { body: text });
+        }
+      }
+      knownAppointments = ids;
+
+      for (const appointment of items) {
+        const row = document.createElement('tr');
+        const date = new Date(appointment.booking_date + 'T12:00:00Z').toLocaleDateString('pt-BR');
+        appendCell(row, `${date} · ${appointment.booking_time}`, true);
+        appendCell(row, appointment.customer_name);
+        appendCell(row, appointment.customer_phone);
+        appendCell(row, appointment.service);
+        appendCell(row, appointment.barber_name);
+        const statusCell = appendCell(row, '');
+        const badge = document.createElement('span');
+        badge.className = 'badge ' + appointment.status;
+        badge.textContent = labels[appointment.status] || appointment.status;
+        statusCell.append(badge);
+        const actions = appendCell(row, '');
+        actions.className = 'row-actions';
+        if (appointment.status === 'pending') {
+          const confirm = document.createElement('button');
+          confirm.type = 'button';
+          confirm.className = 'small-button confirm';
+          confirm.textContent = 'Confirmar';
+          confirm.addEventListener('click', () => updateStatus(appointment, 'confirmed').catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)));
+          actions.append(confirm);
+        }
+        if (appointment.status !== 'cancelled') {
+          const cancel = document.createElement('button');
+          cancel.type = 'button';
+          cancel.className = 'small-button cancel';
+          cancel.textContent = 'Cancelar';
+          cancel.addEventListener('click', () => {
+            if (window.confirm(`Cancelar o horário de ${appointment.customer_name}?`)) {
+              updateStatus(appointment, 'cancelled').catch(error => showMessage(document.querySelector('#dashboard-error'), error.message));
+            }
+          });
+          actions.append(cancel);
+        }
+        tbody.append(row);
+      }
+    }
+
+    async function loadDashboard(notify = false) {
+      const query = dates().toString();
+      const [stats, appointments] = await Promise.all([
+        api('/admin/stats?' + query),
+        api('/admin/appointments?' + query),
+      ]);
+      document.querySelector('#visits').textContent = Number(stats.visits).toLocaleString('pt-BR');
+      document.querySelector('#pending').textContent = stats.appointments.pending || 0;
+      document.querySelector('#confirmed').textContent = stats.appointments.confirmed || 0;
+      document.querySelector('#cancelled').textContent = stats.appointments.cancelled || 0;
+      renderAppointments(appointments, notify);
+      showMessage(document.querySelector('#dashboard-error'), '');
+    }
+
+    async function loadPrices() {
+      const items = await api('/admin/services');
+      const container = document.querySelector('#prices');
+      container.replaceChildren();
+      for (const service of services) {
+        const item = items.find(entry => entry.service === service);
+        const row = document.createElement('div');
+        row.className = 'price-row';
+        const label = document.createElement('label');
+        label.textContent = service;
+        label.htmlFor = 'price-' + services.indexOf(service);
+        const input = document.createElement('input');
+        input.id = label.htmlFor;
+        input.type = 'number';
+        input.min = '0';
+        input.max = '10000';
+        input.step = '0.01';
+        input.inputMode = 'decimal';
+        input.placeholder = 'Não definido';
+        input.value = item?.price_cents == null ? '' : (item.price_cents / 100).toFixed(2);
+        input.dataset.service = service;
+        label.htmlFor = input.id;
+        row.append(label, input);
+        container.append(row);
+      }
+    }
+
+    document.querySelector('#login-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const message = document.querySelector('#login-error');
+      showMessage(message, '');
+      const form = new FormData(event.currentTarget);
+      try {
+        await api('/admin/login', { method: 'POST', body: JSON.stringify({ username: form.get('username'), password: form.get('password') }) });
+        event.currentTarget.reset();
+        await showDashboard();
+      } catch (error) { showMessage(message, error.message); }
+    });
+
+    document.querySelector('#logout').addEventListener('click', async () => {
+      try {
+        await api('/admin/logout', { method: 'POST', body: '{}' });
+        showLogin();
+      } catch (error) {
+        showMessage(document.querySelector('#login-error'), error.message);
+      }
+    });
+
+    document.querySelector('#refresh').addEventListener('click', () => loadDashboard().catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)));
+    document.querySelector('#start-date').addEventListener('change', () => loadDashboard().catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)));
+    document.querySelector('#end-date').addEventListener('change', () => loadDashboard().catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)));
+
+    document.querySelector('#prices-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const prices = [...document.querySelectorAll('#prices input')].map(input => ({
+        service: input.dataset.service,
+        price_cents: input.value === '' ? null : Math.round(Number(input.value) * 100),
+      }));
+      try {
+        await api('/admin/services', { method: 'PUT', body: JSON.stringify({ services: prices }) });
+        showToast('Valores dos serviços salvos.');
+      } catch (error) { showMessage(document.querySelector('#dashboard-error'), error.message); }
+    });
+
+    document.querySelector('#enable-notifications').addEventListener('click', async () => {
+      if (!('Notification' in window)) {
+        showToast('Este navegador não oferece notificações. Os alertas continuarão no painel.');
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      showToast(permission === 'granted' ? 'Alertas de novos agendamentos ativados.' : 'Permissão para notificações não concedida.');
+    });
+
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const end = new Date(today + 'T12:00:00Z');
+    end.setUTCDate(end.getUTCDate() + 6);
+    document.querySelector('#start-date').value = today;
+    document.querySelector('#end-date').value = end.toISOString().slice(0, 10);
+    api('/admin/session').then(showDashboard).catch(() => showLogin());
+  </script>
+</body>
+</html>

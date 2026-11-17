@@ -21,6 +21,9 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: postgresql://${APP_DB_USER}:${APP_DB_PASSWORD}@app-db:5432/barbearia
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       app-db:
         condition: service_healthy
@@ -49,6 +52,7 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./admin.html:/usr/share/nginx/html/admin.html:ro
       - ./2.jpg:/usr/share/nginx/html/2.jpg:ro
       - ./3.jpg:/usr/share/nginx/html/3.jpg:ro
       - ./5.jpg:/usr/share/nginx/html/5.jpg:ro
