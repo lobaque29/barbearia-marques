@@ -52,3 +52,32 @@ CREATE TABLE IF NOT EXISTS notification_jobs (
 CREATE INDEX IF NOT EXISTS notification_jobs_ready_idx
   ON notification_jobs (available_at, id)
   WHERE status IN ('pending', 'retry');
+
+CREATE TABLE IF NOT EXISTS services (
+  service text PRIMARY KEY
+    CHECK (service IN ('Corte', 'Barba', 'Corte + Barba', 'Sobrancelha')),
+  price_cents integer CHECK (price_cents BETWEEN 0 AND 1000000),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+INSERT INTO services (service, price_cents)
+VALUES
+  ('Corte', NULL),
+  ('Barba', NULL),
+  ('Corte + Barba', NULL),
+  ('Sobrancelha', NULL)
+ON CONFLICT (service) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS site_visits (
+  visit_date date PRIMARY KEY,
+  total bigint NOT NULL DEFAULT 0 CHECK (total >= 0)
+);
+
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  token_hash char(64) PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS admin_sessions_expiry_idx
+  ON admin_sessions (expires_at);
