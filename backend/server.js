@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { createHash, randomBytes, scrypt as scryptCallback, scryptSync, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import pg from 'pg';
-import { barbers, dayOffset, localDateKey, normalizeBooking, validDate } from './booking.js';
+import { barbers, dayOffset, localDateKey, normalizeBooking, serviceNames, validDate } from './booking.js';
 import { closeEventStreams, openEventStream, publishUpdate } from './events.js';
 
 const { Pool } = pg;
@@ -14,7 +14,7 @@ const bookingRateLimit = 10;
 const bookingRateWindow = 60_000;
 const adminSessionLifetime = 12 * 60 * 60;
 const adminLoginAttempts = new Map();
-const adminServices = ['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha'];
+const adminServices = serviceNames;
 const configuredAdminPassword = process.env.ADMIN_PASSWORD;
 const configuredAdminUsername = process.env.ADMIN_USERNAME;
 const adminPasswordHash = configuredAdminPassword
@@ -223,7 +223,8 @@ async function updateAppointment(request, response, id) {
 
 async function listServices(response) {
   const result = await pool.query(
-    'SELECT service, price_cents FROM services ORDER BY service',
+    'SELECT service, price_cents FROM services WHERE service = ANY($1::text[]) ORDER BY service',
+    [serviceNames],
   );
   sendJson(response, 200, result.rows);
 }

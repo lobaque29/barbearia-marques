@@ -68,7 +68,12 @@
   </main>
   <div id="toast" class="toast hidden" role="status"></div>
   <script>
-    const services = ['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha'];
+    const services = [
+      'Corte disfarçado', 'Corte social', 'Barba', 'Pezinho', 'Sobrancelha',
+      'Máquina geral', 'Pigmentação', 'Relaxamento',
+      'Disfarçado + Barba + Sobrancelha', 'Disfarçado + Barba', 'Disfarçado + Sobrancelha',
+      'Social + Barba + Sobrancelha', 'Social + Barba', 'Social + Sobrancelha',
+    ];
     const labels = { pending: 'Aguardando', confirmed: 'Confirmado', cancelled: 'Cancelado' };
     const login = document.querySelector('#login'), dashboard = document.querySelector('#dashboard');
     let knownAppointments = null, refreshTimer, toastTimer, eventSource;

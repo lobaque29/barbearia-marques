@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  service text NOT NULL CHECK (service IN ('Corte', 'Barba', 'Corte + Barba', 'Sobrancelha')),
+  service text NOT NULL,
   barber_id text NOT NULL DEFAULT 'wilson',
   customer_name text NOT NULL CHECK (char_length(btrim(customer_name)) BETWEEN 2 AND 80),
   customer_phone text NOT NULL CHECK (customer_phone ~ '^[0-9]{10,15}$'),
@@ -19,6 +19,14 @@ CREATE TABLE IF NOT EXISTS appointments (
 
 ALTER TABLE appointments
   ADD COLUMN IF NOT EXISTS barber_id text NOT NULL DEFAULT 'wilson';
+
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_service_check;
+ALTER TABLE appointments ADD CONSTRAINT appointments_service_check CHECK (service IN (
+  'Corte', 'Corte + Barba', 'Corte disfarçado', 'Corte social', 'Barba', 'Pezinho',
+  'Sobrancelha', 'Máquina geral', 'Pigmentação', 'Relaxamento',
+  'Disfarçado + Barba + Sobrancelha', 'Disfarçado + Barba', 'Disfarçado + Sobrancelha',
+  'Social + Barba + Sobrancelha', 'Social + Barba', 'Social + Sobrancelha'
+));
 
 ALTER TABLE appointments
   DROP CONSTRAINT IF EXISTS appointments_barber_id_check;
@@ -54,19 +62,39 @@ CREATE INDEX IF NOT EXISTS notification_jobs_ready_idx
   WHERE status IN ('pending', 'retry');
 
 CREATE TABLE IF NOT EXISTS services (
-  service text PRIMARY KEY
-    CHECK (service IN ('Corte', 'Barba', 'Corte + Barba', 'Sobrancelha')),
+  service text PRIMARY KEY,
   price_cents integer CHECK (price_cents BETWEEN 0 AND 1000000),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-INSERT INTO services (service, price_cents)
-VALUES
-  ('Corte', NULL),
-  ('Barba', NULL),
-  ('Corte + Barba', NULL),
-  ('Sobrancelha', NULL)
-ON CONFLICT (service) DO NOTHING;
+ALTER TABLE services DROP CONSTRAINT IF EXISTS services_service_check;
+ALTER TABLE services ADD CONSTRAINT services_service_check CHECK (service IN (
+  'Corte', 'Corte + Barba', 'Corte disfarçado', 'Corte social', 'Barba', 'Pezinho',
+  'Sobrancelha', 'Máquina geral', 'Pigmentação', 'Relaxamento',
+  'Disfarçado + Barba + Sobrancelha', 'Disfarçado + Barba', 'Disfarçado + Sobrancelha',
+  'Social + Barba + Sobrancelha', 'Social + Barba', 'Social + Sobrancelha'
+));
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  name text PRIMARY KEY,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);
+
+DO $$
+BEGIN
+  INSERT INTO schema_migrations (name) VALUES ('2026-11-service-catalog')
+  ON CONFLICT DO NOTHING;
+  IF FOUND THEN
+    INSERT INTO services (service, price_cents) VALUES
+      ('Corte disfarçado', 3500), ('Corte social', 3000), ('Barba', 3000),
+      ('Pezinho', 1500), ('Sobrancelha', 1500), ('Máquina geral', 2000),
+      ('Pigmentação', 3000), ('Relaxamento', 3000),
+      ('Disfarçado + Barba + Sobrancelha', 6500), ('Disfarçado + Barba', 5500),
+      ('Disfarçado + Sobrancelha', 4500), ('Social + Barba + Sobrancelha', 6000),
+      ('Social + Barba', 5000), ('Social + Sobrancelha', 4000)
+    ON CONFLICT (service) DO UPDATE SET price_cents = EXCLUDED.price_cents, updated_at = now();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS site_visits (
   visit_date date PRIMARY KEY,

@@ -61,4 +61,4 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /opt/barbearia-marques && git fetch origin main && git merge --ff-only $DEPLOY_SHA && docker compose up --build -d && docker compose up --no-deps --force-recreate -d web && docker compose ps"
+            "cd /opt/barbearia-marques && git fetch origin main && git merge --ff-only $DEPLOY_SHA && docker compose up -d --wait app-db && docker compose exec -T app-db sh -c 'psql -v ON_ERROR_STOP=1 -1 -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\"' < backend/schema.sql && docker compose up --build -d && docker compose up --no-deps --force-recreate -d web && docker compose ps"

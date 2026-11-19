@@ -4,6 +4,7 @@ import {
   dayOffset,
   localDateKey,
   normalizeBooking,
+  serviceNames,
   validBookingDate,
   validBookingTime,
   validDate,
@@ -44,14 +45,14 @@ test('only full-hour shop slots from 09:00 through 18:00 are accepted', () => {
 test('booking input is normalized and validated before reaching PostgreSQL', () => {
   const date = nextOpenDate();
   assert.deepEqual(normalizeBooking({
-    service: 'Corte + Barba',
+    service: 'Disfarçado + Barba',
     barber_id: 'any',
     name: '  Carlos Silva  ',
     phone: '(31) 98888-7777',
     date,
     time: '15:00',
   }), {
-    service: 'Corte + Barba',
+    service: 'Disfarçado + Barba',
     barberId: 'any',
     name: 'Carlos Silva',
     phone: '31988887777',
@@ -59,10 +60,13 @@ test('booking input is normalized and validated before reaching PostgreSQL', () 
     time: '15:00',
   });
   assert.equal(normalizeBooking({ service: 'Inventado', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
-  assert.equal(normalizeBooking({ service: 'Corte', name: 'C', phone: '31988887777', date, time: '15:00' }), null);
-  assert.equal(normalizeBooking({ service: 'Corte', name: 'Carlos', phone: '123', date, time: '15:00' }), null);
-  assert.equal(normalizeBooking({ service: 'Corte', barber_id: 'unknown', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
-  assert.equal(normalizeBooking({ service: 'Corte', barber_id: 'wilson', name: 'Carlos', phone: '31988887777', date, time: '15:00' })?.barberId, 'wilson');
+  assert.equal(normalizeBooking({ service: 'Corte social', barber_id: 'wilson', name: 'C', phone: '31988887777', date, time: '15:00' }), null);
+  assert.equal(normalizeBooking({ service: 'Corte social', barber_id: 'wilson', name: 'Carlos', phone: '123', date, time: '15:00' }), null);
+  assert.equal(normalizeBooking({ service: 'Corte social', barber_id: 'unknown', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
+  for (const service of serviceNames) {
+    assert.equal(normalizeBooking({ service, barber_id: 'wilson', name: 'Carlos', phone: '31988887777', date, time: '15:00' })?.service, service);
+  }
+  assert.equal(normalizeBooking({ service: 'Pomada', barber_id: 'wilson', name: 'Carlos', phone: '31988887777', date, time: '15:00' }), null);
 });
 
 test('date offsets are whole calendar days', () => {

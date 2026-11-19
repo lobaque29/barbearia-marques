@@ -1,5 +1,11 @@
 const zone = 'America/Sao_Paulo';
-const services = new Set(['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha']);
+export const serviceNames = [
+  'Corte disfarçado', 'Corte social', 'Barba', 'Pezinho', 'Sobrancelha',
+  'Máquina geral', 'Pigmentação', 'Relaxamento',
+  'Disfarçado + Barba + Sobrancelha', 'Disfarçado + Barba', 'Disfarçado + Sobrancelha',
+  'Social + Barba + Sobrancelha', 'Social + Barba', 'Social + Sobrancelha',
+];
+const services = new Set(serviceNames);
 export const barbers = [
   { id: 'wilson', name: 'Wilson' },
   { id: 'barbeiro1', name: 'Barbeiro 1' },

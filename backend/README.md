@@ -70,6 +70,18 @@ pela primeira vez. Não remova volumes para aplicar atualizações em produção
 execute migrações controladas e mantenha backups. Não publique `.env` nem os
 volumes de sessão do WhatsApp.
 
+Antes de ativar o novo catálogo em um banco existente, faça backup e aplique
+o schema em uma transação:
+
+```sh
+docker compose exec -T app-db sh -c 'psql -v ON_ERROR_STOP=1 -1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backend/schema.sql
+```
+
+Na primeira aplicação, os preços de Barba e Sobrancelha são substituídos pelos
+valores da tabela de novembro de 2026. Aplicações posteriores preservam os
+preços editados no painel, e agendamentos antigos mantêm seus nomes originais.
+Produtos são informativos no site e não podem ser agendados ou editados no painel.
+
 Se uma notificação atingir o limite de tentativas, confira os logs do worker,
 restabeleça a conexão da Evolution e reprograme o job no banco:
 
