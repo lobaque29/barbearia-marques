@@ -89,4 +89,5 @@ test('WhatsApp notification contains contact, new booking, and the full daily ag
   assert.match(message, /Barbeiro:\* Wilson/);
   assert.match(message, /09:00 - João Souza \(Corte · Barbeiro 1\)/);
   assert.match(message, /15:30 - Carlos Silva \(Corte \+ Barba · Wilson\).*Novo/);
+  assert.match(message, /— Barbearia Marques$/);
 });

@@ -53,6 +53,7 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./index.html:/usr/share/nginx/html/index.html:ro
       - ./admin.html:/usr/share/nginx/html/admin.html:ro
+      - ./logo.png:/usr/share/nginx/html/logo.png:ro
       - ./2.jpg:/usr/share/nginx/html/2.jpg:ro
       - ./3.jpg:/usr/share/nginx/html/3.jpg:ro
       - ./5.jpg:/usr/share/nginx/html/5.jpg:ro

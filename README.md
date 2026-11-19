@@ -1,4 +1,10 @@
-# Barbearia Marquês: agenda em Docker
+# Barbearia Marques: agenda em Docker
+
+## GitHub Pages
+
+O workflow `.github/workflows/pages.yml` publica a vitrine estática no GitHub
+Pages. O Pages não executa a API: agenda, preços administrados e painel dependem
+do site e da API hospedados juntos no VPS, no mesmo domínio HTTPS.
 
 ## Publicação automática no VPS
 
@@ -17,9 +23,8 @@ Para ativá-lo:
 4. Configure HTTPS no proxy reverso do VPS, usando o mesmo domínio para o site
    e a API, e defina `COOKIE_SECURE=true` no `.env`.
 
-O workflow não transfere o `.env` nem apaga os volumes. Após confirmar que o
-novo endereço funciona, desative o GitHub Pages nas configurações do repositório:
-ele não executa a API e não será mais atualizado por este workflow.
+O workflow não transfere o `.env` nem apaga os volumes. O GitHub Pages continua
+publicando a vitrine estática separadamente, sem acesso ao backend do VPS.
 
 Reservas e preços são atualizados na página aberta por eventos; há consultas
 periódicas como contingência caso a conexão de eventos seja interrompida.

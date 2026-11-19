@@ -30,5 +30,5 @@ export function buildMessage(appointment, daySchedule) {
     const line = `${item.booking_time.slice(0, 5)} - ${item.customer_name} (${item.service} · ${item.barber_name})`;
     return isNew ? `🕒 *${line}* 👈 _Novo_` : `• ${line}`;
   });
-  return [...heading, ...rows, '', '— Barbearia Marquês'].join('\n');
+  return [...heading, ...rows, '', '— Barbearia Marques'].join('\n');
 }
