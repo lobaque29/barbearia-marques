@@ -20,6 +20,13 @@ Supabase para consultar a agenda e alterar `status` para `confirmed` ou
 `cancelled`. Os preços dos serviços podem ser alterados em `barbearia_services`;
 os produtos são informativos no site e seus preços são fixos no HTML.
 
+A mensagem privada com os agendamentos pendentes e confirmados de cada data
+fica em **Table Editor > barbearia_agenda_mensagem**. Copie a célula `mensagem`
+da data desejada e envie pelo WhatsApp manualmente; não há envio automático.
+Datas sem agendamentos ativos não aparecem. O recurso é instalado aplicando
+`supabase/agenda-mensagem.sql` após `supabase/agenda.sql`; não conceda acesso
+à view ou às tabelas de clientes aos papéis públicos.
+
 O fluxo público de reservas ainda não implementa CAPTCHA ou limitação de
 requisições por cliente; avalie proteção contra abuso antes de uso comercial.
 O painel `admin.html`, o contador de visitas e as notificações automáticas do
