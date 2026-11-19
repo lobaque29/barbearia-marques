@@ -3,6 +3,7 @@ import { createHash, randomBytes, scrypt as scryptCallback, scryptSync, timingSa
 import { promisify } from 'node:util';
 import pg from 'pg';
 import { barbers, dayOffset, localDateKey, normalizeBooking, validDate } from './booking.js';
+import { closeEventStreams, openEventStream, publishUpdate } from './events.js';
 
 const { Pool } = pg;
 const deriveScrypt = promisify(scryptCallback);
@@ -210,6 +211,7 @@ async function updateAppointment(request, response, id) {
       return;
     }
     sendJson(response, 200, result.rows[0]);
+    publishUpdate('appointments');
   } catch (error) {
     if (error.code === '23505') {
       sendJson(response, 409, { error: 'O barbeiro já tem outro agendamento nesse horário.' });
@@ -260,6 +262,7 @@ async function updateServices(request, response) {
       );
     }
     await client.query('COMMIT');
+    publishUpdate('services');
     await listServices(response);
   } catch (error) {
     await client.query('ROLLBACK');
@@ -365,6 +368,7 @@ async function createAppointment(request, response) {
       [appointment.id],
     );
     await client.query('COMMIT');
+    publishUpdate('appointments');
     sendJson(response, 201, {
       reserved: true,
       booking: { ...appointment, barber_name: barber.name },
@@ -389,6 +393,10 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/health') {
       await pool.query('SELECT 1');
       sendJson(response, 200, { status: 'ok' });
+    } else if (request.method === 'GET' && url.pathname === '/api/events') {
+      if (!openEventStream(response)) {
+        sendJson(response, 503, { error: 'Limite de conexões em tempo real atingido.' });
+      }
     } else if (request.method === 'GET' && url.pathname === '/api/services') {
       await listServices(response);
     } else if (request.method === 'POST' && url.pathname === '/api/visits') {
@@ -477,6 +485,7 @@ server.listen(Number(process.env.PORT || 3000), '0.0.0.0', () => {
 });
 
 async function shutdown() {
+  closeEventStreams();
   server.close();
   await pool.end();
 }

@@ -1,5 +1,29 @@
 # Barbearia Marquês: agenda em Docker
 
+## Publicação automática no VPS
+
+O workflow `.github/workflows/deploy-vps.yml` executa os testes do backend e,
+se forem aprovados, publica atualizações enviadas à branch `main` no VPS.
+Para ativá-lo:
+
+1. Prepare o VPS com Docker Compose, clone este repositório em
+   `/opt/barbearia-marques` e configure o arquivo `.env` nesse diretório.
+2. Crie uma chave SSH de implantação restrita ao usuário do serviço. Esse usuário
+   precisa poder acessar o repositório e executar `git` e `docker compose`.
+3. Configure os segredos `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_PRIVATE_KEY`
+   e `DEPLOY_KNOWN_HOSTS` em **Settings > Secrets and variables > Actions** no
+   GitHub. Verifique a chave pública do host SSH por um canal confiável antes
+   de cadastrá-la em `DEPLOY_KNOWN_HOSTS`.
+4. Configure HTTPS no proxy reverso do VPS, usando o mesmo domínio para o site
+   e a API, e defina `COOKIE_SECURE=true` no `.env`.
+
+O workflow não transfere o `.env` nem apaga os volumes. Após confirmar que o
+novo endereço funciona, desative o GitHub Pages nas configurações do repositório:
+ele não executa a API e não será mais atualizado por este workflow.
+
+Reservas e preços são atualizados na página aberta por eventos; há consultas
+periódicas como contingência caso a conexão de eventos seja interrompida.
+
 Stack local: site servido pelo Nginx, API Node.js, PostgreSQL para agendamentos,
 worker de notificações e Evolution API com PostgreSQL/Redis próprios. Os horários
 são gravados como horário local de `America/Sao_Paulo`; o índice único do banco

@@ -40,6 +40,10 @@ impede duas reservas ativas para a mesma data e hora.
 
 ## Como funciona
 
+- O site recebe avisos de reservas, mudanças de status e preços por
+  `GET /api/events` (Server-Sent Events); o painel recebe avisos de reservas
+  e mudanças de status. O navegador reconecta automaticamente e ambos mantêm
+  consultas periódicas como contingência. Os avisos não contêm dados de clientes.
 - `GET /api/availability?start_date=AAAA-MM-DD&end_date=AAAA-MM-DD` retorna apenas
   datas e horários ocupados, sem expor os dados dos clientes.
 - `POST /api/appointments` recebe serviço, nome, telefone, data e hora. A reserva

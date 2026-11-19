@@ -71,7 +71,7 @@
     const services = ['Corte', 'Barba', 'Corte + Barba', 'Sobrancelha'];
     const labels = { pending: 'Aguardando', confirmed: 'Confirmado', cancelled: 'Cancelado' };
     const login = document.querySelector('#login'), dashboard = document.querySelector('#dashboard');
-    let knownAppointments = null, refreshTimer, toastTimer;
+    let knownAppointments = null, refreshTimer, toastTimer, eventSource;
 
     function showMessage(element, message) {
       element.textContent = message;
@@ -107,6 +107,8 @@
 
     function showLogin() {
       clearInterval(refreshTimer);
+      eventSource?.close();
+      eventSource = null;
       dashboard.classList.add('hidden');
       login.classList.remove('hidden');
     }
@@ -122,6 +124,16 @@
       if (dashboard.classList.contains('hidden')) return;
       clearInterval(refreshTimer);
       refreshTimer = setInterval(() => loadDashboard(true).catch(error => showMessage(document.querySelector('#dashboard-error'), error.message)), 20000);
+      eventSource?.close();
+      if ('EventSource' in window) {
+        eventSource = new EventSource('/api/events');
+        eventSource.addEventListener('appointments', () => {
+          loadDashboard(true).catch(error => showMessage(document.querySelector('#dashboard-error'), error.message));
+        });
+        eventSource.onopen = () => {
+          loadDashboard(true).catch(error => showMessage(document.querySelector('#dashboard-error'), error.message));
+        };
+      }
     }
 
     function dates() {
