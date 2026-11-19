@@ -1,10 +1,37 @@
-# Barbearia Marques: agenda em Docker
+# Barbearia Marques
+
+## Agenda no Supabase e GitHub Pages
+
+O site público usa as funções e tabelas de `supabase/agenda.sql`, aplicadas
+uma vez em um projeto Supabase novo. O site usa somente a chave publicável;
+nunca coloque a senha do banco nem chaves `secret` ou `service_role` no site.
+As tabelas não permitem acesso direto aos clientes por usuários anônimos.
+
+Reservas pendentes e confirmadas bloqueiam a data e horário do barbeiro;
+cancelamentos liberam o horário. As funções do banco aplicam essa regra também
+quando clientes reservam simultaneamente. A página consulta disponibilidade e
+preços a cada 15 segundos; a reserva é sempre verificada novamente no banco.
+
+Depois de reservar, o cliente precisa abrir o WhatsApp e tocar em **Enviar**.
+A barbearia não recebe mensagem automaticamente se o cliente não enviar.
+A mensagem contém somente os dados da própria reserva, não a agenda de outras
+pessoas. Acesse **Table Editor > barbearia_appointments** no painel privado do
+Supabase para consultar a agenda e alterar `status` para `confirmed` ou
+`cancelled`. Os preços dos serviços podem ser alterados em `barbearia_services`;
+os produtos são informativos no site e seus preços são fixos no HTML.
+
+O fluxo público de reservas ainda não implementa CAPTCHA ou limitação de
+requisições por cliente; avalie proteção contra abuso antes de uso comercial.
+O painel `admin.html`, o contador de visitas e as notificações automáticas do
+backend Docker não estão integrados à agenda do Supabase.
+
+## Backend Docker anterior
 
 ## GitHub Pages
 
-O workflow `.github/workflows/pages.yml` publica a vitrine estática no GitHub
-Pages. O Pages não executa a API: agenda, preços administrados e painel dependem
-do site e da API hospedados juntos no VPS, no mesmo domínio HTTPS.
+O workflow `.github/workflows/pages.yml` publica o site estático no GitHub Pages.
+O restante desta seção descreve o backend Docker anterior, não a integração
+Supabase usada pelo site atual.
 
 ## Publicação automática no VPS
 
