@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { barbers } from './booking.js';
-import { buildMessage } from './notifications.js';
+import { buildMessage, formatPhone } from './notifications.js';
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });

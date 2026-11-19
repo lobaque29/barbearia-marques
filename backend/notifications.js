@@ -1,4 +1,4 @@
-function formatPhone(phone) {
+export function formatPhone(phone) {
   const digits = phone.replace(/\D/g, '');
   return digits.startsWith('55') ? digits : `55${digits}`;
 }

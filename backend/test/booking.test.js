@@ -9,7 +9,7 @@ import {
   validBookingTime,
   validDate,
 } from '../booking.js';
-import { buildMessage } from '../notifications.js';
+import { buildMessage, formatPhone } from '../notifications.js';
 
 function nextOpenDate() {
   const date = new Date(`${localDateKey()}T00:00:00Z`);
@@ -71,6 +71,11 @@ test('booking input is normalized and validated before reaching PostgreSQL', () 
 
 test('date offsets are whole calendar days', () => {
   assert.equal(dayOffset('2026-11-18', '2026-11-17'), 1);
+});
+
+test('WhatsApp numbers use the Brazilian country code', () => {
+  assert.equal(formatPhone('(31) 98888-7777'), '5531988887777');
+  assert.equal(formatPhone('+55 (31) 98888-7777'), '5531988887777');
 });
 
 test('WhatsApp notification contains contact, new booking, and the full daily agenda', () => {
