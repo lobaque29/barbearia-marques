@@ -251,15 +251,24 @@ begin
     raise exception 'Esse horário já possui um agendamento.' using errcode = '23P01';
   end if;
 
+  if exists (
+    select 1
+      from public.barbearia_blocked_slots as blocks
+     where blocks.booking_date = p_date
+       and blocks.booking_time = p_time
+       and blocks.barber_id = p_barber_id
+  ) then
+    raise exception 'Esse horário já está bloqueado.' using errcode = '23505';
+  end if;
+
   insert into public.barbearia_blocked_slots as inserted (
     booking_date, booking_time, barber_id, reason, created_by
   )
   values (p_date, p_time, p_barber_id, clean_reason, auth.uid())
-  on conflict (booking_date, booking_time, barber_id) do nothing
   returning inserted.id into block_id;
 
   if block_id is null then
-    raise exception 'Esse horário já está bloqueado.' using errcode = '23505';
+    raise exception 'O horário não foi bloqueado.' using errcode = 'P0001';
   end if;
 
   return query
