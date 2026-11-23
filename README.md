@@ -167,3 +167,20 @@ UPDATE notification_jobs
        last_error = NULL, locked_at = NULL
  WHERE status = 'failed';
 ```
+
+
+## Acesso do barbeiro pela landing page
+
+A opção **Área do barbeiro** permite entrar com GitHub ou e-mail e senha do Supabase Auth. Para ativar o cancelamento de horários:
+
+1. Execute `supabase/barber-admin.sql` no SQL Editor do projeto Supabase.
+2. Em **Authentication > Providers > GitHub**, habilite o provedor. Crie um OAuth App no GitHub e informe o Client ID e o Client Secret diretamente no painel do Supabase. Use como callback URL o endereço indicado pelo Supabase.
+3. Em **Authentication > URL Configuration**, permita `https://lobaque29.github.io/barbearia-marques/`.
+4. Entre uma vez pelo GitHub, copie o UUID criado em **Authentication > Users** e autorize-o no SQL Editor:
+
+```sql
+insert into public.barbearia_admin_users (user_id)
+values ('UUID_DO_USUARIO');
+```
+
+O login usa OAuth com PKCE. A primeira entrada GitHub não libera a agenda até que o UUID seja autorizado. Não publique Client Secrets nem uma chave `service_role` no site.
