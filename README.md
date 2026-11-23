@@ -22,15 +22,16 @@ de requisições por cliente e está sujeita a reservas falsas. O painel antigo
 `admin.html`, o contador de visitas e o envio automático de notificações não
 estão integrados ao Supabase.
 
-## Acesso do barbeiro para cancelar horários
+## Área do barbeiro: reservas e horários bloqueados
 
 A opção **Área do barbeiro** aparece dentro da landing page. O acesso usa
 Supabase Auth com e-mail e senha; clientes não podem listar nem
 cancelar agendamentos. A senha é digitada no formulário e não deve ser colocada
 no HTML, JavaScript ou em outros arquivos publicados. Para ativar:
 
-1. Execute [`supabase/barber-admin.sql`](./supabase/barber-admin.sql) no SQL
-   Editor do mesmo projeto Supabase usado pelo site.
+1. Execute [`supabase/barber-admin.sql`](./supabase/barber-admin.sql) e depois
+   [`supabase/barber-blocked-slots.sql`](./supabase/barber-blocked-slots.sql) no
+   SQL Editor do mesmo projeto Supabase usado pelo site.
 2. Em **Authentication > Users**, crie um usuário com o e-mail e a senha do
    barbeiro e copie o UUID da conta.
 3. No SQL Editor, autorize somente esse usuário:
@@ -41,12 +42,14 @@ no HTML, JavaScript ou em outros arquivos publicados. Para ativar:
    ```
 
 4. Publique o arquivo `barber-dashboard.js` junto com a landing page. O barbeiro
-   abre **Área do barbeiro**, entra com e-mail e senha, filtra as datas e cancela
-   uma reserva ativa; o horário volta a ficar disponível para os clientes.
+   abre **Área do barbeiro**, entra com e-mail e senha, filtra as datas, cancela
+   reservas ou bloqueia um horário específico para um barbeiro. Bloqueios ativos
+   deixam de aparecer como disponíveis aos clientes; use **Liberar horário**
+   para removê-los.
 
-As funções de agenda e cancelamento verificam a lista de usuários autorizados no
-banco. Não conceda acesso direto à tabela nem use uma chave `service_role` no
-navegador.
+As funções de agenda, cancelamento, bloqueio e liberação verificam a lista de
+usuários autorizados no banco. Não conceda acesso direto à tabela nem use uma
+chave `service_role` no navegador.
 
 ## Backend Docker anterior
 

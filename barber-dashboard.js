@@ -15,9 +15,12 @@
     #barber-dashboard-dialog .barber-title{margin:0;font-size:24px}
     #barber-dashboard-dialog .barber-muted{color:#b8b2a5}
     #barber-dashboard-dialog .barber-form{display:grid;gap:13px;margin-top:22px}
+    #barber-dashboard-dialog .barber-block-section{margin:22px 0}
+    #barber-dashboard-dialog .barber-block-title{margin:0 0 10px;font-size:17px}
+    #barber-dashboard-dialog .barber-block-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));align-items:end;gap:10px}
     #barber-dashboard-dialog .barber-field{display:grid;gap:6px}
     #barber-dashboard-dialog label{color:#b8b2a5;font-size:12px;font-weight:700}
-    #barber-dashboard-dialog input{min-height:42px;width:100%;padding:0 11px;border:1px solid #39352a;border-radius:8px;background:#1b1b1b;color:#f5f2e8;font:inherit}
+    #barber-dashboard-dialog input,#barber-dashboard-dialog select{min-height:42px;width:100%;padding:0 11px;border:1px solid #39352a;border-radius:8px;background:#1b1b1b;color:#f5f2e8;font:inherit}
     #barber-dashboard-dialog .barber-button{min-height:38px;padding:0 13px;border:1px solid #39352a;border-radius:8px;background:#1b1b1b;color:#f5f2e8;font:600 13px system-ui,sans-serif;cursor:pointer}
     #barber-dashboard-dialog .barber-primary{border-color:#d4af37;background:#d4af37;color:#171717}
     #barber-dashboard-dialog .barber-cancel{color:#e17770}
@@ -259,7 +262,45 @@
       }
       rows.append(row);
     }
-    showError(error, '');
+  }
+
+  async function loadBlockedSlots(start, end, rows, empty, error) {
+    const blockedSlots = await rpc('barbearia_admin_blocked_slots', {
+      p_start: start.value,
+      p_end: end.value,
+    });
+    if (!Array.isArray(blockedSlots)) throw new Error('Não foi possível interpretar os horários bloqueados.');
+    rows.replaceChildren();
+    empty.hidden = blockedSlots.length > 0;
+    for (const blockedSlot of blockedSlots) {
+      const row = document.createElement('tr');
+      appendCell(row, `${dateLabel(blockedSlot.booking_date)} · ${String(blockedSlot.booking_time).slice(0, 5)}`);
+      appendCell(row, blockedSlot.barber_name || blockedSlot.barber_id);
+      appendCell(row, blockedSlot.reason || 'Indisponível');
+      const action = appendCell(row, '');
+      const unblock = element('button', 'barber-button barber-cancel', 'Liberar horário');
+      unblock.type = 'button';
+      unblock.addEventListener('click', async () => {
+        const time = String(blockedSlot.booking_time).slice(0, 5);
+        if (!window.confirm(`Liberar ${blockedSlot.barber_name || blockedSlot.barber_id} em ${dateLabel(blockedSlot.booking_date)} às ${time}?`)) return;
+        unblock.disabled = true;
+        showError(error, '');
+        try {
+          const result = await rpc('barbearia_unblock_slot', {
+            p_block_id: blockedSlot.id,
+          });
+          if (!Array.isArray(result) || !result.length) {
+            throw new Error('O horário não foi liberado. Atualize a agenda e tente novamente.');
+          }
+          await loadBlockedSlots(start, end, rows, empty, error);
+        } catch (reason) {
+          unblock.disabled = false;
+          showError(error, reason.message);
+        }
+      });
+      action.append(unblock);
+      rows.append(row);
+    }
   }
 
   async function buildAgenda() {
@@ -285,7 +326,7 @@
       }
     });
     header.append(logout);
-    shell.append(header, element('p', 'barber-muted', 'Cancele uma reserva se o cliente desistir; o horário será liberado no site.'));
+    shell.append(header, element('p', 'barber-muted', 'Cancele reservas ou bloqueie horários para que não possam ser reservados no site.'));
 
     const toolbar = element('form', 'barber-toolbar');
     const start = element('input');
@@ -307,6 +348,65 @@
 
     const error = element('div', 'barber-error');
     error.hidden = true;
+    const appointmentsRows = document.createElement('tbody');
+    const appointmentsEmpty = element('div', 'barber-empty', 'Nenhum agendamento neste período.');
+    appointmentsEmpty.hidden = true;
+    const blockSection = element('section', 'barber-block-section');
+    blockSection.append(element('h3', 'barber-block-title', 'Bloquear horário'));
+    const blockForm = element('form', 'barber-block-form');
+    const blockDate = element('input');
+    blockDate.type = 'date';
+    blockDate.required = true;
+    blockDate.min = dateKey();
+    blockDate.max = shiftDate(blockDate.min, 21);
+    blockDate.value = blockDate.min;
+    const barber = document.createElement('select');
+    barber.required = true;
+    for (const [id, name] of [['', 'Selecione o barbeiro'], ['wilson', 'Wilson'], ['barbeiro1', 'Barbeiro 1'], ['barbeiro2', 'Barbeiro 2']]) {
+      const option = element('option', '', name);
+      option.value = id;
+      barber.append(option);
+    }
+    const blockTime = document.createElement('select');
+    blockTime.required = true;
+    for (const time of ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']) {
+      const option = element('option', '', time);
+      option.value = time;
+      blockTime.append(option);
+    }
+    const reason = element('input');
+    reason.type = 'text';
+    reason.maxLength = 120;
+    reason.placeholder = 'Opcional';
+    const addBlock = element('button', 'barber-button barber-primary', 'Bloquear');
+    addBlock.type = 'submit';
+    for (const [labelText, input] of [['Data', blockDate], ['Barbeiro', barber], ['Horário', blockTime], ['Motivo', reason]]) {
+      const field = element('div', 'barber-field');
+      const label = element('label', '', labelText);
+      label.htmlFor = `barber-block-${labelText.toLowerCase()}`;
+      input.id = label.htmlFor;
+      field.append(label, input);
+      blockForm.append(field);
+    }
+    blockForm.append(addBlock);
+    blockSection.append(blockForm);
+
+    blockSection.append(element('h3', 'barber-block-title', 'Horários bloqueados'));
+    const blockedTableWrap = element('div', 'barber-table-wrap');
+    const blockedTable = document.createElement('table');
+    const blockedHead = document.createElement('thead');
+    const blockedHeaderRow = document.createElement('tr');
+    for (const heading of ['Data e horário', 'Barbeiro', 'Motivo', 'Ação']) {
+      blockedHeaderRow.append(element('th', '', heading));
+    }
+    blockedHead.append(blockedHeaderRow);
+    const blockedRows = document.createElement('tbody');
+    const blockedEmpty = element('div', 'barber-empty', 'Nenhum horário bloqueado neste período.');
+    blockedEmpty.hidden = true;
+    blockedTable.append(blockedHead, blockedRows);
+    blockedTableWrap.append(blockedTable, blockedEmpty);
+    blockSection.append(blockedTableWrap);
+
     const tableWrap = element('div', 'barber-table-wrap');
     const table = document.createElement('table');
     const head = document.createElement('thead');
@@ -315,21 +415,50 @@
       headerRow.append(element('th', '', heading));
     }
     head.append(headerRow);
-    const rows = document.createElement('tbody');
-    table.append(head, rows);
-    const empty = element('div', 'barber-empty', 'Nenhum agendamento neste período.');
-    empty.hidden = true;
-    tableWrap.append(table, empty);
+    table.append(head, appointmentsRows);
+    tableWrap.append(table, appointmentsEmpty);
     toolbar.addEventListener('submit', event => {
       event.preventDefault();
       refresh.disabled = true;
-      loadAppointments(start, end, rows, empty, error)
+      showError(error, '');
+      Promise.all([
+        loadAppointments(start, end, appointmentsRows, appointmentsEmpty, error),
+        loadBlockedSlots(start, end, blockedRows, blockedEmpty, error),
+      ])
         .catch(reason => showError(error, reason.message))
         .finally(() => { refresh.disabled = false; });
     });
-    shell.append(toolbar, error, tableWrap);
+    blockForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      addBlock.disabled = true;
+      showError(error, '');
+      try {
+        const result = await rpc('barbearia_block_slot', {
+          p_date: blockDate.value,
+          p_time: blockTime.value,
+          p_barber_id: barber.value,
+          p_reason: reason.value.trim() || null,
+        });
+        if (!Array.isArray(result) || !result.length) {
+          throw new Error('O horário não foi bloqueado. Atualize a agenda e tente novamente.');
+        }
+        reason.value = '';
+        await Promise.all([
+          loadAppointments(start, end, appointmentsRows, appointmentsEmpty, error),
+          loadBlockedSlots(start, end, blockedRows, blockedEmpty, error),
+        ]);
+      } catch (reason) {
+        showError(error, reason.message);
+      } finally {
+        addBlock.disabled = false;
+      }
+    });
+    shell.append(toolbar, error, blockSection, tableWrap);
     try {
-      await loadAppointments(start, end, rows, empty, error);
+      await Promise.all([
+        loadAppointments(start, end, appointmentsRows, appointmentsEmpty, error),
+        loadBlockedSlots(start, end, blockedRows, blockedEmpty, error),
+      ]);
     } catch (reason) {
       showError(error, reason.message);
     }
