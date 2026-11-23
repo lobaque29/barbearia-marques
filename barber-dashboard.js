@@ -2,9 +2,7 @@
   const SUPABASE_URL = 'https://dufsnearwwbekqxmvyqn.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_GTkOo6txLjw7aBUsy4By3g_pVdOXiPq';
   const labels = { pending: 'Aguardando', confirmed: 'Confirmado', cancelled: 'Cancelado' };
-  const oauthVerifierKey = 'barber-github-code-verifier';
   let session = null;
-  let oauthError = '';
 
   const styles = document.createElement('style');
   styles.textContent = `
@@ -22,9 +20,6 @@
     #barber-dashboard-dialog input{min-height:42px;width:100%;padding:0 11px;border:1px solid #39352a;border-radius:8px;background:#1b1b1b;color:#f5f2e8;font:inherit}
     #barber-dashboard-dialog .barber-button{min-height:38px;padding:0 13px;border:1px solid #39352a;border-radius:8px;background:#1b1b1b;color:#f5f2e8;font:600 13px system-ui,sans-serif;cursor:pointer}
     #barber-dashboard-dialog .barber-primary{border-color:#d4af37;background:#d4af37;color:#171717}
-    #barber-dashboard-dialog .barber-github{width:100%;margin-top:14px}
-    #barber-dashboard-dialog .barber-divider{display:flex;align-items:center;gap:12px;margin:16px 0 0;color:#b8b2a5;font-size:12px}
-    #barber-dashboard-dialog .barber-divider::before,#barber-dashboard-dialog .barber-divider::after{content:"";height:1px;flex:1;background:#39352a}
     #barber-dashboard-dialog .barber-cancel{color:#e17770}
     #barber-dashboard-dialog button:disabled{opacity:.55;cursor:wait}
     #barber-dashboard-dialog .barber-error{margin:14px 0;padding:10px 12px;border:1px solid #75403c;border-radius:8px;background:#321c1b;color:#f0aaa3}
@@ -96,82 +91,6 @@
     session = await responseJson(response);
   }
 
-  function base64Url(bytes) {
-    let binary = '';
-    for (const byte of bytes) binary += String.fromCharCode(byte);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-  }
-
-  async function startGithubSignIn() {
-    if (!window.crypto?.subtle || !window.crypto?.getRandomValues) {
-      throw new Error('Este navegador não oferece suporte ao login seguro. Abra o site em HTTPS.');
-    }
-    const randomBytes = window.crypto.getRandomValues(new Uint8Array(32));
-    const verifier = base64Url(randomBytes);
-    const digest = await window.crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(verifier),
-    );
-    const challenge = base64Url(new Uint8Array(digest));
-    sessionStorage.setItem(oauthVerifierKey, verifier);
-
-    const redirectTo = new URL(
-      window.location.pathname + window.location.search,
-      window.location.origin,
-    );
-    const authorizeUrl = new URL(`${SUPABASE_URL}/auth/v1/authorize`);
-    authorizeUrl.searchParams.set('provider', 'github');
-    authorizeUrl.searchParams.set('apikey', SUPABASE_ANON_KEY);
-    authorizeUrl.searchParams.set('redirect_to', redirectTo.toString());
-    authorizeUrl.searchParams.set('code_challenge', challenge);
-    authorizeUrl.searchParams.set('code_challenge_method', 's256');
-    window.location.assign(authorizeUrl.toString());
-  }
-
-  async function completeGithubSignIn() {
-    const callbackUrl = new URL(window.location.href);
-    const code = callbackUrl.searchParams.get('code');
-    const authError = callbackUrl.searchParams.get('error_description') ||
-      callbackUrl.searchParams.get('error');
-    if (!code && !authError) return;
-
-    callbackUrl.searchParams.delete('code');
-    callbackUrl.searchParams.delete('error');
-    callbackUrl.searchParams.delete('error_description');
-    callbackUrl.searchParams.delete('error_code');
-    window.history.replaceState(
-      window.history.state,
-      '',
-      callbackUrl.pathname + callbackUrl.search + callbackUrl.hash,
-    );
-
-    if (authError) {
-      sessionStorage.removeItem(oauthVerifierKey);
-      oauthError = authError;
-      return;
-    }
-
-    const verifier = sessionStorage.getItem(oauthVerifierKey);
-    sessionStorage.removeItem(oauthVerifierKey);
-    if (!verifier) {
-      oauthError = 'Não foi possível validar o retorno do GitHub. Tente entrar novamente.';
-      return;
-    }
-    try {
-      const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
-      });
-      session = await responseJson(response);
-      oauthError = '';
-    } catch (error) {
-      oauthError = error.message;
-    }
-  }
-
-  const oauthCallbackPromise = completeGithubSignIn();
-
   async function refreshSession() {
     if (!session?.refresh_token) throw new Error('Sua sessão expirou. Entre novamente.');
     const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
@@ -237,7 +156,7 @@
       element('h2', 'barber-title', 'Acesso do barbeiro'),
       closeButton(),
     );
-    shell.append(header, element('p', 'barber-muted', 'Entre com e-mail e senha ou com a conta GitHub autorizada.'));
+    shell.append(header, element('p', 'barber-muted', 'Entre com seu e-mail e senha.'));
 
     const form = element('form', 'barber-form');
     const email = element('input');
@@ -274,21 +193,7 @@
         password.value = '';
       }
     });
-    const divider = element('div', 'barber-divider', 'ou');
-    const github = element('button', 'barber-button barber-github', 'Entrar com GitHub');
-    github.type = 'button';
-    github.addEventListener('click', async () => {
-      github.disabled = true;
-      showError(error, '');
-      try {
-        await startGithubSignIn();
-      } catch (reason) {
-        showError(error, reason.message);
-        github.disabled = false;
-      }
-    });
-    shell.append(form, divider, github, error);
-    if (oauthError) showError(error, oauthError);
+    shell.append(form, error);
     email.focus();
   }
 
@@ -430,9 +335,8 @@
     }
   }
 
-  trigger.addEventListener('click', async () => {
+  trigger.addEventListener('click', () => {
     if (!dialog.open) dialog.showModal();
-    await oauthCallbackPromise;
     if (session?.access_token) buildAgenda();
     else buildLogin();
   });
