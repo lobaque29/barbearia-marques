@@ -36,7 +36,7 @@ begin
   if p_start is null or p_end is null
      or p_start < (now() at time zone 'America/Sao_Paulo')::date
      or p_end < p_start
-     or p_end > (now() at time zone 'America/Sao_Paulo')::date + 21 then
+     or p_end > (now() at time zone 'America/Sao_Paulo')::date + 14 then
     raise exception 'Período inválido' using errcode = '22023';
   end if;
 
@@ -89,7 +89,7 @@ begin
      or clean_phone !~ '^[0-9]{10,15}$'
      or p_date is null
      or p_date < today
-     or p_date > today + 21
+     or p_date > today + 14
      or extract(dow from p_date) = 0
      or p_time is null
      or p_time < time '09:00'
